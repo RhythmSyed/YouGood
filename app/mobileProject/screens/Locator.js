@@ -1,38 +1,6 @@
 import React, { Component } from 'react';
-import { PermissionsAndroid, View, Text, StyleSheet, TouchableOpacity, TouchableHighlight, Button, Alert, Animated } from 'react-native';
+import { PermissionsAndroid, View, Text, StyleSheet, Button, Alert, Animated } from 'react-native';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
-import awsIot from 'aws-iot-device-sdk';
-var AWS = require('aws-sdk');
-
-const device = awsIot.device({
-    host: "a2pv8pigeo9wbh-ats.iot.us-east-2.amazonaws.com",
-    clientId: Math.random(),
-    protocol: "wss",
-    accessKeyId: "AKIAJBDBZHG3VXU5TLQQ",
-    secretKey: "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"
-});
-
-device.on('connect', () => {
-  device.subscribe('user_location')
-})
-
-device.on('message', (topic, message) => {
-  console.log(topic, message.toString())  
-  Alert.alert(
-    'Alert Title',
-    'My Alert Msg',
-    [
-      {text: 'Ask me later', onPress: () => console.log('Ask me later pressed')},
-      {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-      {text: 'OK', onPress: () => console.log('OK Pressed')},
-    ],
-    { cancelable: false }
-  )
-})
-
-device.on('error', error => {
-  console.log(error)
-})
 
 async function requestUserLocation(){
     try
