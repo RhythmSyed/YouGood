@@ -1,1 +1,1 @@
-Run 'npm install' upon git pull
+Run 'npm install' after git pull to install dependencies
