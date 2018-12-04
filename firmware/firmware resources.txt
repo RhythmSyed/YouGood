@@ -1,0 +1,6 @@
+Resources:
+
+https://github.com/VRomanov89/EEEnthusiast/tree/master/MPU-6050%20Implementation/MPU6050_Implementation
+https://learn.sparkfun.com/tutorials/esp8266-thing-hookup-guide/using-the-arduino-addon
+Ep. 57 Arduino Accelerometer & Gyroscope Tutorial MPU-6050 6DOF Module:
+	https://www.youtube.com/watch?v=M9lZ5Qy5S2s&t=412s
