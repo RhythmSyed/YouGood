@@ -1,12 +1,8 @@
-/* Library References: 
-        https://github.com/odelot/aws-mqtt-websockets         (1)
-
-*/
-
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
 #include <Stream.h>
+#include <Wire.h>
 
 //********************AWS Headers********************//
 //AWS
@@ -66,6 +62,7 @@ MQTT::Client<IPStack, Countdown, maxMQTTpackageSize, maxMQTTMessageHandlers> *cl
 void setup() {
   pinMode(16, INPUT);
   pinMode(2, OUTPUT);
+  
   Serial.begin (115200);
   delay (2000);
   Serial.setDebugOutput(1);
@@ -85,6 +82,9 @@ void setup() {
   awsWSclient.setAWSSecretKey(aws_secret);
   awsWSclient.setUseSSL(true);
 
+  //************** MPU Setup **************//
+  Wire.begin();
+  setupMPU();
 
 }
 
@@ -95,7 +95,11 @@ void loop() {
     if (digitalRead(16) == LOW) {
       Serial.println ("\nDetected Logic HIGH on PIN 16\n");
       digitalWrite(2, LOW);
-      sendmessage(42);
+
+      MPU_delta();
+      delay(100);
+      
+      //sendmessage(42);
     }
     else {
       Serial.println("nothing");
@@ -108,88 +112,12 @@ void loop() {
 }
 
 //*************************************** Helper Functions ***************************************//
-// Attribution Reference (1)
-bool connect () {         // connects to websocket layer and mqtt layer
-  if (client == NULL) {
-    client = new MQTT::Client<IPStack, Countdown, maxMQTTpackageSize, maxMQTTMessageHandlers>(ipstack);
-  } else {
-
-    if (client->isConnected ()) {    
-      client->disconnect ();
-    }  
-    delete client;
-    client = new MQTT::Client<IPStack, Countdown, maxMQTTpackageSize, maxMQTTMessageHandlers>(ipstack);
-  }
-  
-  //delay is not necessary... it just help us to get a "trustful" heap space value
-  delay (1000);
-  Serial.print (millis ());
-  Serial.print (" - conn: ");
-  Serial.print (++connection);
-  Serial.print (" - (");
-  Serial.print (ESP.getFreeHeap ());
-  Serial.println (")");
-
-
-  int rc = ipstack.connect(aws_endpoint, port);
-  if (rc != 1)
-  {
-    Serial.println("error connection to the websocket server");
-    return false;
-  } else {
-    Serial.println("websocket layer connected");
-  }
-
-
-  Serial.println("MQTT connecting");
-  MQTTPacket_connectData data = MQTTPacket_connectData_initializer;
-  data.MQTTVersion = 3;
-  char* clientID = generateClientID ();
-  data.clientID.cstring = clientID;
-  rc = client->connect(data);
-  delete[] clientID;
-  if (rc != 0)
-  {
-    Serial.print("error connection to MQTT server");
-    Serial.println(rc);
-    return false;
-  }
-  Serial.println("MQTT connected");
-  digitalWrite(2, LOW);
-  return true;
-}
 
 //subscription to MQTT topics
 void subscribe () {
   for (int i=0; i<4; i++) {  
     int rc = client->subscribe(subscribeTopic[i], MQTT::QOS0, messageArrived);
   }  
-}
-
-//callback to handle mqtt messages
-void messageArrived(MQTT::MessageData& md)
-{
-  MQTT::Message &message = md.message;
-  
-  int len = md.topicName.lenstring.len;
-  memcpy(currentTopic, md.topicName.lenstring.data, (size_t)len);
-  
-  Serial.print("Message from ");
-  Serial.print(currentTopic);
-  Serial.print("\n arrived: qos ");
-  Serial.print(message.qos);
-  Serial.print(", retained ");
-  Serial.print(message.retained);
-  Serial.print(", dup ");
-  Serial.print(message.dup);
-  Serial.print(", packetid ");
-  Serial.println(message.id);
-  Serial.print("Payload ");
-  char* msg = new char[message.payloadlen+1]();
-  memcpy (msg,message.payload,message.payloadlen);
-  Serial.println(msg);
-  //sendmessage(msg);
-  delete msg;
 }
 
 //send a message to a mqtt topic
