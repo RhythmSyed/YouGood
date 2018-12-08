@@ -116,14 +116,15 @@ void MPU_delta() {
   accel_mag = sqrt(delta_gForcex*delta_gForcex + delta_gForcey*delta_gForcey + delta_gForcez*delta_gForcez);
   rot_mag = sqrt(delta_rotX*delta_rotX + delta_rotY*delta_rotY + delta_rotZ*delta_rotZ);
 
-//  Serial.print("\n\naccel_mag: ");
-  //Serial.print(accel_mag);
-//  Serial.print("\n\n");
 
+//  Serial.print("\n\naccel_mag: ");
+//  Serial.print(accel_mag);
+//  Serial.print("\n\n");
+//
 //  Serial.print("\n\nrot_mag: ");
-    //Serial.print(rot_mag);
+//  Serial.print(rot_mag);
 //  Serial.print("\n\n");
   
-  printData();
+  //printData();
 }
 

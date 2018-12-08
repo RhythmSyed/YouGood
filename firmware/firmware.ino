@@ -59,9 +59,30 @@ const int maxMQTTpackageSize = 512;
 const int maxMQTTMessageHandlers = 1;     // change when increasing # of topics
 MQTT::Client<IPStack, Countdown, maxMQTTpackageSize, maxMQTTMessageHandlers> *client = NULL;
 
+//********************Heart Rate Configs********************//
+#define USE_ARDUINO_INTERRUPTS false
+#include <PulseSensorPlayground.h>
+
+const int OUTPUT_TYPE = SERIAL_PLOTTER;
+
+const int PULSE_INPUT = 14;
+const int PULSE_BLINK = 12;    // Pin 13 is the on-board LED
+const int PULSE_FADE = 5;
+const int THRESHOLD = 550;   // Adjust this number to avoid noise when idle
+
+byte samplesUntilReport;
+const byte SAMPLES_PER_SERIAL_SAMPLE = 10;
+PulseSensorPlayground pulseSensor;
+int myBPM;
+int BPM_THRESHOLD = 90;
+//********************Heart Rate Configs********************//
+
 void setup() {
   pinMode(16, INPUT);
   pinMode(2, OUTPUT);
+  pinMode(14, INPUT);
+  pinMode(12, OUTPUT);
+  digitalWrite(12, HIGH);
   
   Serial.begin (115200);
   delay (2000);
@@ -86,25 +107,46 @@ void setup() {
   Wire.begin();
   setupMPU();
 
+  // Configure the PulseSensor manager.
+  pulseSensor.analogInput(PULSE_INPUT);
+  pulseSensor.blinkOnPulse(PULSE_BLINK);
+  pulseSensor.fadeOnPulse(PULSE_FADE);
+
+  pulseSensor.setSerial(Serial);
+  //pulseSensor.setOutputType(OUTPUT_TYPE);
+  pulseSensor.setThreshold(THRESHOLD);
+
+  // Skip the first SAMPLES_PER_SERIAL_SAMPLE in the loop().
+  samplesUntilReport = SAMPLES_PER_SERIAL_SAMPLE;
+
+  // Now that everything is ready, start reading the PulseSensor signal.
+  if (!pulseSensor.begin()) {
+  }
+  
 }
 
 void loop() {
   if (awsWSclient.connected()) {      // keep the mqtt up and running      
     // client->yield();
     // subscribe();
-    if (digitalRead(16) == LOW) {
-      Serial.println ("\nDetected Logic HIGH on PIN 16\n");
-      digitalWrite(2, LOW);
-
-      MPU_delta();
-      delay(100);
-      
-      //sendmessage(42);
+    
+    myBPM = pulseSensor.getBeatsPerMinute();
+    if (pulseSensor.sawNewSample()) {
+      if (--samplesUntilReport == (byte) 0) {
+        samplesUntilReport = SAMPLES_PER_SERIAL_SAMPLE;
+  
+        pulseSensor.outputSample();
+        if (pulseSensor.sawStartOfBeat()) {
+          pulseSensor.outputBeat();
+        }
+      }
+      if (myBPM >= BPM_THRESHOLD) {
+        sendmessage(myBPM);
+      }
     }
-    else {
-      Serial.println("nothing");
-      digitalWrite(2, HIGH);
-    }
+    
+//    MPU_delta();
+//    delay(100);  
   } 
   else {                              // handle reconnection
     connect ();
@@ -121,11 +163,11 @@ void subscribe () {
 }
 
 //send a message to a mqtt topic
-void sendmessage (float answer_to_life) {
+void sendmessage (int answer_to_life) {
     //send a message
     MQTT::Message message;
     char buf[100];
-    sprintf(buf, "%f", answer_to_life);
+    sprintf(buf, "%i", answer_to_life);
     message.qos = MQTT::QOS0;
     message.retained = false;
     message.dup = false;
