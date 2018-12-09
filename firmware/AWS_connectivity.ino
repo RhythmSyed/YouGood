@@ -75,6 +75,6 @@ void messageArrived(MQTT::MessageData& md)
   char* msg = new char[message.payloadlen+1]();
   memcpy (msg,message.payload,message.payloadlen);
   Serial.println(msg);
-  //sendmessage(msg);
+  handle_incoming_message(msg);
   delete msg;
 }

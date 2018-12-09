@@ -28,17 +28,6 @@ class Splash extends Component {
         return (
             <View style={styles.container}>
                 <Text style={styles.title}>YouGood? Fall Detector</Text>
-                <View style = {styles.button}>
-                    <Button title="Timer" onPress={()=> {
-                        Alert.alert(
-                            'This does nothing',
-                            'Sams a bitch',
-                            [{text: 'OK', onPress: () => console.log('OK Pressed')}],
-                            { cancelable: false }
-                
-                        )}
-                    }/>
-                </View>
             </View>
         );
     }

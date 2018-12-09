@@ -21,7 +21,6 @@ async function requestUserLocation(){
       }
     } 
     catch(err) {
-      console.warn(err)
       return false;
     }
 }
@@ -47,23 +46,19 @@ class Locator extends Component {
       }
     )
   }
-
+  
   render() {
+    if(requestUserLocation()){
+      this.getUserLocation();
+    } else {
+      Alert.alert(
+        'Turn On GPS',
+        [{text: 'OK', onPress: () => console.log('OK Pressed')}],
+        { cancelable: false }
+      )
+    }
     return (
       <View style={styles.mapContainer} key={'initial'}>
-        <Button title="Get User Location" 
-          onPress={ () => 
-            {
-              if(requestUserLocation()){
-                  this.getUserLocation();
-              }
-              else{
-                Alert("No")
-              }
-            }
-          }
-        />
-        
         <MapView
           initialRegion={{
             latitude: 40.42877019,
@@ -81,7 +76,6 @@ class Locator extends Component {
           showsIndoors = {true}
           loadingEnabled = {true}
         >
-
         {this.state.location_marker.map(marker => (
           <MapView.Marker 
             coordinate={marker.coordinates}

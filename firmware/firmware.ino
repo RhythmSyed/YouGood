@@ -49,14 +49,15 @@ char* generateClientID () {
 int arrivedcount = 0;
 
 // Collection of Topics
-char *subscribeTopic[1] = {
-  "user_location"
+char *subscribeTopic[2] = {
+  "im_good",
+  "fall_detected"
 };  //when adding topics, increase maxMQTTMessageHandlers
 char currentTopic[sizeof(subscribeTopic[0])];
 
 // MQTT Packet Size allocation
 const int maxMQTTpackageSize = 512;
-const int maxMQTTMessageHandlers = 1;     // change when increasing # of topics
+const int maxMQTTMessageHandlers = 2;     // change when increasing # of topics
 MQTT::Client<IPStack, Countdown, maxMQTTpackageSize, maxMQTTMessageHandlers> *client = NULL;
 
 //********************Heart Rate Configs********************//
@@ -71,19 +72,20 @@ const int PULSE_FADE = 5;
 const int THRESHOLD = 550;   // Adjust this number to avoid noise when idle
 
 byte samplesUntilReport;
-const byte SAMPLES_PER_SERIAL_SAMPLE = 10;
+const byte SAMPLES_PER_SERIAL_SAMPLE = 20;
 PulseSensorPlayground pulseSensor;
 int myBPM;
-int BPM_THRESHOLD = 90;
+int BPM_THRESHOLD = 100;
+float ACCELERATION_THRESHOLD = 40.0;
+float ROTATION_THRESHOLD = 60;
 //********************Heart Rate Configs********************//
+float curr_accel;
+float curr_rot;
+boolean buzzer_flag;
+boolean fall_detected;
+float startTime, endTime, time_diff;
 
 void setup() {
-  pinMode(16, INPUT);
-  pinMode(2, OUTPUT);
-  pinMode(14, INPUT);
-  pinMode(12, OUTPUT);
-  digitalWrite(12, HIGH);
-  
   Serial.begin (115200);
   delay (2000);
   Serial.setDebugOutput(1);
@@ -122,32 +124,47 @@ void setup() {
   // Now that everything is ready, start reading the PulseSensor signal.
   if (!pulseSensor.begin()) {
   }
-  
+
+  buzzer_flag = false;
+  fall_detected = false;
+  startTime = millis();
 }
 
 void loop() {
-  if (awsWSclient.connected()) {      // keep the mqtt up and running      
-    // client->yield();
-    // subscribe();
-    
-    myBPM = pulseSensor.getBeatsPerMinute();
-    if (pulseSensor.sawNewSample()) {
-      if (--samplesUntilReport == (byte) 0) {
-        samplesUntilReport = SAMPLES_PER_SERIAL_SAMPLE;
   
-        pulseSensor.outputSample();
-        if (pulseSensor.sawStartOfBeat()) {
-          pulseSensor.outputBeat();
+  if (awsWSclient.connected()) {      // keep the mqtt up and running    
+    if (fall_detected == false) {
+      MPU_record();
+      curr_accel = get_accelMag_MPU();
+      curr_rot = get_rotMag_MPU();
+      endTime = millis();
+      time_diff = (endTime - startTime) / 1000;
+      Serial.print("curr_accel(g): "); Serial.println(curr_accel);
+      Serial.print("curr_rot(o): "); Serial.println(curr_rot * time_diff);
+      Serial.print("time_diff(s): "); Serial.println(time_diff);
+      if (curr_accel >= ACCELERATION_THRESHOLD)
+      {
+        if ((curr_rot * time_diff) >= ROTATION_THRESHOLD) {
+          Serial.println("MOOOOOOOOOOOOOOOOOOOOOOOOOOOOM FELLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL"); 
+          sendmessage(1);
+          buzzer_flag = true;
+          fall_detected = true;
         }
       }
-      if (myBPM >= BPM_THRESHOLD) {
-        sendmessage(myBPM);
-      }
+      startTime = millis();
+    }
+    else {
+      // check for im good 
+      client->yield();
+      subscribe(); 
     }
     
-//    MPU_delta();
-//    delay(100);  
-  } 
+    if (buzzer_flag == true) {
+      digitalWrite(12, LOW);
+    } else {
+      digitalWrite(12, HIGH);
+    }
+  }
   else {                              // handle reconnection
     connect ();
   }
@@ -157,7 +174,7 @@ void loop() {
 
 //subscription to MQTT topics
 void subscribe () {
-  for (int i=0; i<4; i++) {  
+  for (int i=0; i<2; i++) {  
     int rc = client->subscribe(subscribeTopic[i], MQTT::QOS0, messageArrived);
   }  
 }
@@ -175,3 +192,14 @@ void sendmessage (int answer_to_life) {
     message.payloadlen = strlen(buf)+1;
     int rc = client->publish("upload_topic", message); 
 }
+
+void handle_incoming_message(char* incoming_msg) {
+    int my_msg = atoi(incoming_msg);    
+    if (my_msg == 1) {
+      Serial.println("TURNING OFF BUZZ BUZZ");
+      digitalWrite(12, HIGH);
+      buzzer_flag = false;
+      fall_detected = false;
+    }
+}
+
