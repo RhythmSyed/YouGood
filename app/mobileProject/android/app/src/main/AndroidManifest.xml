@@ -14,7 +14,12 @@
       <meta-data
       android:name="com.google.android.geo.API_KEY"
       android:value="AIzaSyA3nV3XBRTGBi-S2Le0mGdc_WVfXOsZyj4"/>
-      
+    
+    <service
+      android:name="com.twilio.client.TwilioClientService"
+      android:exported="false"
+      android:stopWithTask="true" />
+
       <activity
         android:name=".MainActivity"
         android:label="@string/app_name"
