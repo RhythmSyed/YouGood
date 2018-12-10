@@ -76,8 +76,8 @@ const byte SAMPLES_PER_SERIAL_SAMPLE = 20;
 PulseSensorPlayground pulseSensor;
 int myBPM;
 int BPM_THRESHOLD = 100;
-float ACCELERATION_THRESHOLD = 40.0;
-float ROTATION_THRESHOLD = 60;
+float ACCELERATION_THRESHOLD = 30.0;
+float ROTATION_THRESHOLD = 4000;
 //********************Heart Rate Configs********************//
 float curr_accel;
 float curr_rot;
@@ -86,6 +86,7 @@ boolean fall_detected;
 float startTime, endTime, time_diff;
 
 void setup() {
+  pinMode(2, OUTPUT);
   Serial.begin (115200);
   delay (2000);
   Serial.setDebugOutput(1);
@@ -127,31 +128,31 @@ void setup() {
 
   buzzer_flag = false;
   fall_detected = false;
-  startTime = millis();
+  //startTime = millis();
 }
 
 void loop() {
   
-  if (awsWSclient.connected()) {      // keep the mqtt up and running    
+  if (awsWSclient.connected()) {      // keep the mqtt up and running
+    digitalWrite(2, LOW);    
     if (fall_detected == false) {
       MPU_record();
       curr_accel = get_accelMag_MPU();
       curr_rot = get_rotMag_MPU();
-      endTime = millis();
-      time_diff = (endTime - startTime) / 1000;
+      //endTime = millis();
+      //time_diff = (endTime - startTime) / 1000;
       Serial.print("curr_accel(g): "); Serial.println(curr_accel);
-      Serial.print("curr_rot(o): "); Serial.println(curr_rot * time_diff);
-      Serial.print("time_diff(s): "); Serial.println(time_diff);
+      Serial.print("curr_rot(o/s): "); Serial.println(curr_rot);
+      //printData();
       if (curr_accel >= ACCELERATION_THRESHOLD)
       {
-        if ((curr_rot * time_diff) >= ROTATION_THRESHOLD) {
+        if (curr_rot >= ROTATION_THRESHOLD) {
           Serial.println("MOOOOOOOOOOOOOOOOOOOOOOOOOOOOM FELLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL"); 
           sendmessage(1);
           buzzer_flag = true;
           fall_detected = true;
         }
       }
-      startTime = millis();
     }
     else {
       // check for im good 
@@ -166,6 +167,7 @@ void loop() {
     }
   }
   else {                              // handle reconnection
+    digitalWrite(2, HIGH);
     connect ();
   }
 }
