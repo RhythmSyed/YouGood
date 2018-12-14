@@ -30,11 +30,11 @@ void setupMPU(){
   Wire.endTransmission();  
   Wire.beginTransmission(0b1101000); //I2C address of the MPU
   Wire.write(0x1B); //Accessing the register 1B - Gyroscope Configuration (Sec. 4.4) 
-  Wire.write(0x00000011); //Setting the gyro to full scale +/- 250deg./s 
+  Wire.write(0x00000001); //Setting the gyro to full scale +/- 250deg./s 
   Wire.endTransmission(); 
   Wire.beginTransmission(0b1101000); //I2C address of the MPU
   Wire.write(0x1C); //Accessing the register 1C - Acccelerometer Configuration (Sec. 4.5) 
-  Wire.write(0b00000011); //Setting the accel to +/- 2g
+  Wire.write(0b00000001); //Setting the accel to +/- 2g
   Wire.endTransmission(); 
 }
 
@@ -51,9 +51,9 @@ void recordAccelRegisters() {
 }
 
 void processAccelData(){
-  gForceX = accelX / 2048.0;
-  gForceY = accelY / 2048.0; 
-  gForceZ = accelZ / 2048.0;
+  gForceX = accelX / 8192.0;
+  gForceY = accelY / 8192.0; 
+  gForceZ = accelZ / 8192.0;
 }
 
 void recordGyroRegisters() {
@@ -69,9 +69,9 @@ void recordGyroRegisters() {
 }
 
 void processGyroData() {
-  rotX = gyroX / 16.4;
-  rotY = gyroY / 16.4; 
-  rotZ = gyroZ / 16.4;
+  rotX = gyroX / 65.5;
+  rotY = gyroY / 65.5; 
+  rotZ = gyroZ / 65.5;
 }
 
 void printData() {
@@ -121,4 +121,5 @@ float get_accelMag_MPU() {
 float get_rotMag_MPU() {
   return sqrt(delta_rotX*delta_rotX + delta_rotY*delta_rotY + delta_rotZ*delta_rotZ);
 }
+
 

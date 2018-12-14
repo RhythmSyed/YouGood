@@ -78,3 +78,4 @@ void messageArrived(MQTT::MessageData& md)
   handle_incoming_message(msg);
   delete msg;
 }
+
