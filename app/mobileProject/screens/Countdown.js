@@ -4,6 +4,11 @@ import { StyleSheet, Text, View, Button } from 'react-native';
 import awsIot from 'aws-iot-device-sdk';
 
 // Reference Attribution: https://www.npmjs.com/package/react-native-timer-countdown
+/*
+    countdown sequence once fall is detected. Connection to AWS is authenticated with:
+        host: direct API to IOT 'thing' with publish and subscribe permissions
+        accessKeyID, secretKey: generated with AWS IAM (Identity and Access Management)
+*/
 
 const device = awsIot.device({
     host: "a2pv8pigeo9wbh-ats.iot.us-east-2.amazonaws.com",

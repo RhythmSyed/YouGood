@@ -1,3 +1,11 @@
+/*
+  This is the main application that contains 3 screens:
+    Splash screen: provides a simple title and waits for the user to fall
+    Countdown: once the user falls, the countdown will start from 30 sec until the user pressed "im good"
+    Locator: if the user is not good, this screen will grab the GPS info from the user's phone and send it to multiple 'important' phone numbers
+*/
+
+
 import React, {Component} from 'react';
 import { createStackNavigator } from 'react-navigation';
 

@@ -2,6 +2,12 @@ import React, { Component } from 'react';
 import { PermissionsAndroid, View, Text, StyleSheet, Button, Alert, Animated } from 'react-native';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 
+/* 
+  This page gets the user location by accessing the android manifest and getting coordinate data
+  from the GPS hardware on the phone.
+  The coordinates are displayed using google maps 
+*/
+
 async function requestUserLocation(){
     try
     {
