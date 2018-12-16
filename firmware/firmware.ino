@@ -139,6 +139,7 @@ void setup() {
 
 void loop() {
 
+  // checks for acceleration and rotation spikes 
   if (OTA_flag == false) {
     if (awsWSclient.connected()) {      // keep the mqtt up and running
       digitalWrite(2, LOW);    
